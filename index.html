@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DORK CLICKER: 5000T EDITION</title>
+    <style>
+        body { margin: 0; display: flex; height: 100vh; font-family: 'Courier New', Courier, monospace; background: #000; color: #0f0; overflow: hidden; user-select: none; }
+        
+        #left-panel { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, #1a0033 0%, #000 100%); border-right: 3px solid #0f0; position: relative; }
+        #cookie-container { text-align: center; width: 90%; }
+        #cookie-count { font-size: 32px; font-weight: bold; text-shadow: 0 0 10px #0f0; color: #fff; word-wrap: break-word; margin-bottom: 5px; }
+        #cps-display { font-size: 18px; color: #ff00ff; margin-bottom: 20px; font-weight: bold; }
+        #big-cookie { width: 280px; cursor: pointer; transition: 0.05s; filter: drop-shadow(0 0 20px #0f0); border-radius: 50%; }
+        #big-cookie:active { transform: scale(0.9); filter: hue-rotate(90deg) brightness(2); }
+
+        #right-panel { width: 400px; background: #050505; overflow-y: auto; border-left: 2px solid #333; }
+        .section-title { background: #0f0; padding: 12px; text-align: center; font-weight: bold; color: #000; text-transform: uppercase; }
+        
+        .building { background: #111; margin: 2px; padding: 15px; display: flex; justify-content: space-between; border: 1px solid #222; cursor: pointer; transition: 0.2s; }
+        .building:hover { background: #1a1a1a; border-color: #0f0; }
+        .building.locked { opacity: 0.4; filter: grayscale(1); cursor: not-allowed; }
+        .building-info b { display: block; font-size: 18px; color: #0f0; }
+        .building-info span { color: #888; font-size: 13px; }
+        .building-count { font-size: 28px; font-weight: bold; color: #333; }
+
+        #admin-log { position: absolute; bottom: 20px; left: 20px; color: #ff00ff; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+<div id="left-panel">
+    <div id="cookie-container">
+        <div id="cookie-count">0 cookies</div>
+        <div id="cps-display">CPS: 0</div>
+        <img src="https://orteil.dashnet.org/cookieclicker/img/perfectCookie.png" id="big-cookie">
+    </div>
+    <div id="admin-log">SYSTEM STATUS: NOMINAL</div>
+</div>
+
+<div id="right-panel">
+    <div class="section-title">STORE</div>
+    <div id="building-list"></div>
+</div>
+
+<script>
+// THE EXACT NUMBER: 5,000,000,000,000,000
+const FIVE_THOUSAND_TRILLION = 5000000000000000;
+
+let cookies = 0;
+let totalCPS = 0;
+let clickPower = 1;
+let ownerMode = false;
+
+const buildings = [
+    { id: 0, name: "Cursor",  cost: 15,     cps: 0.1,  owned: 0 },
+    { id: 1, name: "Grandma", cost: 100,    cps: 1,    owned: 0 },
+    { id: 2, name: "Farm",    cost: 1100,   cps: 8,    owned: 0 },
+    { id: 3, name: "Mine",    cost: 12000,  cps: 47,   owned: 0 },
+    { id: 4, name: "Factory", cost: 130000, cps: 260,  owned: 0 },
+    { id: 5, name: "Bank",    cost: 1400000,cps: 1400, owned: 0 }
+];
+
+function updateUI() {
+    document.getElementById('cookie-count').innerText = Math.floor(cookies).toLocaleString() + " cookies";
+    document.getElementById('cps-display').innerText = "CPS: " + totalCPS.toLocaleString();
+    renderStore();
+}
+
+function renderStore() {
+    const list = document.getElementById('building-list');
+    list.innerHTML = "";
+    buildings.forEach(b => {
+        let price = Math.floor(b.cost * Math.pow(1.15, b.owned));
+        let canAfford = cookies >= price;
+        
+        let div = document.createElement('div');
+        div.className = canAfford ? "building" : "building locked";
+        div.innerHTML = `
+            <div class="building-info">
+                <b>${b.name}</b>
+                <span>Price: ${price.toLocaleString()}</span>
+            </div>
+            <div class="building-count">${b.owned}</div>
+        `;
+        div.onclick = () => { if(cookies >= price) { cookies -= price; b.owned++; calculateCPS(); updateUI(); } };
+        list.appendChild(div);
+    });
+}
+
+function calculateCPS() {
+    if (ownerMode) {
+        totalCPS = FIVE_THOUSAND_TRILLION;
+    } else {
+        totalCPS = 0;
+        buildings.forEach(b => totalCPS += (b.owned * b.cps));
+    }
+}
+
+document.getElementById('big-cookie').onclick = () => {
+    cookies += clickPower;
+    updateUI();
+};
+
+// Main Game Heartbeat (Smooth 10-tick second)
+setInterval(() => {
+    cookies += (totalCPS / 10);
+    updateUI();
+}, 100);
+
+// --- THE BYPASS: CTRL + / ---
+window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === '/') {
+        e.preventDefault();
+        
+        ownerMode = true;
+        
+        // Give Quadrillions to start
+        cookies = 999000000000000000; 
+        
+        // Lock Click Power and CPS to exactly 5,000,000,000,000,000
+        clickPower = FIVE_THOUSAND_TRILLION;
+        totalCPS = FIVE_THOUSAND_TRILLION;
+
+        // Visual confirmation
+        document.getElementById('admin-log').innerText = "SYSTEM STATUS: OWNER OVERRIDE [5000T ACTIVE]";
+        document.getElementById('admin-log').style.color = "#0f0";
+        document.getElementById('left-panel').style.borderRight = "5px solid #ff00ff";
+        
+        // Instant visual update
+        updateUI();
+    }
+});
+
+updateUI();
+</script>
+</body>
+</html>
